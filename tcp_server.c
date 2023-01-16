@@ -1,13 +1,13 @@
 #include<stdio.h>
 #include<stdlib.h>
-
+#include<string.h>
 #include<sys/types.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
 
 int main() {
 
-    char server_message[256]="You have reached server";
+    
 
     //create a socket
     int server_socket;
@@ -20,7 +20,7 @@ int main() {
     server_add.sin_addr.s_addr=INADDR_ANY;
 
     //bind
-    bind(server_socket,(struct *sockaddr)&server_add,sizeof(server_add));
+    bind(server_socket,(struct sockaddr *)&server_add,sizeof(server_add));
 
     //listen
     listen(server_socket,2);
@@ -30,19 +30,20 @@ int main() {
 
     client_socket=accept(server_socket,NULL,NULL);
     
-    //send
-
-    send(client_socket,server_message,sizeof(server_message));
-     
-    //receive data from server
-
-    char server_response[256];
-    recv(network_socket,&server_response,sizeof(server_response),0);
-
-    //output
-
-    printf("%s\n",server_response);
-
+    
+    char message[256];
+    //read string sent by client
+    int val=read(client_socket,message,sizeof(message));
+    printf("%s\n",message);
+    int l=strlen(message);
+    int i,j;
+    for(i=0, j=l-1;i<j;i++,j--){
+    	char c=message[i];
+    	message[i]=message[j];
+    	message[j]=c;
+    }
+    printf("%s\n",message);
+    send(client_socket,message,sizeof(message),0);
     close(server_socket);
     return 0;
 

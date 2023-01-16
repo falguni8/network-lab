@@ -16,7 +16,7 @@ int main() {
     server_add.sin_port=htons(9002);//port
     server_add.sin_addr.s_addr=INADDR_ANY;
 
-    int connection_status=connect(network_socket,(struct *sockaddr)&server_add,sizeof(server_add));
+    int connection_status=connect(network_socket,(struct sockaddr*)&server_add,sizeof(server_add));
 
     if(connection_status<0){
         printf("ERROR in connecting to socket\n");
@@ -24,13 +24,13 @@ int main() {
 
     //receive data from server
 
-    char server_response[256];
-    recv(network_socket,&server_response,sizeof(server_response),0);
-
-    //output
-
-    printf("%s\n",server_response);
-
+    char message[256];
+    scanf("%s",message);
+    int l=strlen(message);
+    //send tto server
+    send(network_socket,message,sizeof(message),0);
+    int val=read(network_socket,message,sizeof(message));
+    printf("%s\n",message);
     close(network_socket);
     return 0;
 
