@@ -1,0 +1,59 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/select.h>
+
+#define NUM_CLIENTS 10
+#define BUF_SIZE 256
+
+int clients[NUM_CLIENTS];
+char client_names[NUM_CLIENTS][32];
+
+void handle_client(int client_fd) {
+    char buf[BUF_SIZE];
+    int n = read(client_fd, buf, BUF_SIZE);
+    if (n < 0) {
+        perror("read");
+        return;
+    }
+    buf[n] = '\0';
+    printf("Received message from %s: %s\n", client_names[client_fd], buf);
+}
+
+int main() {
+    int i;
+    for (i = 0; i < NUM_CLIENTS; i++) {
+        clients[i] = -1;
+        strcpy(client_names[i], "Client");
+    }
+
+    fd_set read_fds;
+    int max_fd = 0;
+
+    while (1) {
+        FD_ZERO(&read_fds);
+
+        for (i = 0; i < NUM_CLIENTS; i++) {
+            if (clients[i] != -1) {
+                FD_SET(clients[i], &read_fds);
+                if (clients[i] > max_fd) {
+                    max_fd = clients[i];
+                }
+            }
+        }
+
+        int nready = select(max_fd + 1, &read_fds, NULL, NULL, NULL);
+        if (nready < 0) {
+            perror("select");
+            return 1;
+        }
+
+        for (i = 0; i < NUM_CLIENTS; i++) {
+            if (FD_ISSET(clients[i], &read_fds)) {
+                handle_client(clients[i]);
+            }
+        }
+    }
+    return 0;
+}
