@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include<stdbool.h>
 
 #define MAX_PACKET_SIZE 1024
 
@@ -26,6 +27,20 @@ typedef struct
 
 // Function prototypes
 
+int count_type1 = 0, count_type2 = 0;
+pthread_mutex_t mutex;
+
+unsigned char calculate_checksum(unsigned char *packet, size_t packet_size)
+{
+    unsigned char checksum = 0;
+
+    for (size_t i = 0; i < packet_size; i++)
+    {
+        checksum ^= packet[i];
+    }
+
+    return checksum;
+}
 
 void *error_check_thread(void *arg)
 {
@@ -77,6 +92,7 @@ void *type1_process_thread(void *arg)
 
         // Process packet of type 1
         printf("Processing packet type 1, sequence number %d\n", received_packet.seq_num);
+        count_type1++;
     }
 }
 
@@ -104,25 +120,16 @@ void *type2_process_thread(void *arg)
 
         // Process packet of type 2
         printf("Processing packet type 2, sequence number %d\n", received_packet.seq_num);
+        count_type2++;
     }
 }
 
-unsigned char calculate_checksum(unsigned char *packet, size_t packet_size)
-{
-    unsigned char checksum = 0;
 
-    for (size_t i = 0; i < packet_size; i++)
-    {
-        checksum ^= packet[i];
-    }
-
-    return checksum;
-}
 
 void *packet_count_thread(void *arg)
 {
     int sockfd = *(int *)arg;
-    int count_type1 = 0, count_type2 = 0;
+    
     
     while (1)
     {
@@ -160,7 +167,7 @@ int main()
     }
 
     // Create a mutex to synchronize access to the packet count variables
-    pthread_mutex_t mutex;
+    
     if (pthread_mutex_init(&mutex, NULL) != 0)
     {
         perror("pthread_mutex_init");
@@ -216,3 +223,4 @@ int main()
 
     return 0;
 }
+
