@@ -19,12 +19,12 @@ typedef struct
 unsigned char calculate_checksum(unsigned char *packet, size_t packet_size)
 {
     unsigned char checksum = 0;
-
+    printf("%d\n",sizeof(packet));
     for (size_t i = 0; i < packet_size; i++)
     {
         checksum ^= packet[i];
     }
-
+    printf("%u\n",checksum);
     return checksum;
 }
 
@@ -40,6 +40,12 @@ int main()
     }
 
     // Set up the address structure for the receiver
+    pthread_mutex_t mutex;
+    if (pthread_mutex_init(&mutex, NULL) != 0)
+    {
+        perror("pthread_mutex_init");
+        exit(1);
+    }
     struct sockaddr_in receiver_addr;
     memset(&receiver_addr, 0, sizeof(receiver_addr));
     receiver_addr.sin_family = AF_INET;
@@ -50,10 +56,11 @@ int main()
     while (1)
     {
         // Send packet type 1 every 100ms
+        pthread_mutex_lock(&mutex);
         packet_t packet_type_1;
         packet_type_1.type = 1;
         packet_type_1.seq_num = seq_number;
-        memset(packet_type_1.payload,"TYPE1", strlen("TYPE1"));
+        memset(packet_type_1.payload,"TYPE1", sizeof("TYPE1"));
         packet_type_1.trailer[0] = calculate_checksum((unsigned char *)&packet_type_1, sizeof(packet_t));
         ssize_t bytes_sent = sendto(sockfd, &packet_type_1, sizeof(packet_t), 0, (struct sockaddr *)&receiver_addr, sizeof(receiver_addr));
         if (bytes_sent < 0)
@@ -61,13 +68,15 @@ int main()
             perror("sendto");
         }
         seq_number++;
+        
         usleep(100000);
-
+        pthread_mutex_unlock(&mutex);
+        pthread_mutex_lock(&mutex);
         // Send packet type 2 every 150ms
         packet_t packet_type_2;
         packet_type_2.type = 2;
         packet_type_2.seq_num = seq_number;
-        memset(packet_type_2.payload,"TYPE2", strlen("TYPE2"));
+        memset(packet_type_2.payload,"TYPE2", sizeof("TYPE2"));
         packet_type_2.trailer[0] = calculate_checksum((unsigned char *)&packet_type_2, sizeof(packet_t));
         bytes_sent = sendto(sockfd, &packet_type_2, sizeof(packet_t), 0, (struct sockaddr *)&receiver_addr, sizeof(receiver_addr));
         if (bytes_sent < 0)
@@ -76,6 +85,7 @@ int main()
         }
         seq_number++;
         usleep(150000);
+        pthread_mutex_unlock(&mutex);
     }
 
     // Close the socket
@@ -83,3 +93,4 @@ int main()
 
     return 0;
 }
+
