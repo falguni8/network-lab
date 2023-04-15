@@ -33,13 +33,13 @@ pthread_mutex_t mutex;
 unsigned char calculate_checksum(unsigned char *packet, size_t packet_size)
 {
     unsigned char checksum = 0;
-    printf("%d\n",sizeof(packet));
+    //printf("%d\n",sizeof(packet));
     for (size_t i = 0; i < packet_size; i++)
     {
         checksum ^= packet[i];
         //printf("%u ",packet[i]);
     }
-    printf("%u\n",checksum);
+    //printf("%u\n",checksum);
 
     return checksum;
 }
@@ -62,7 +62,7 @@ void *error_check_thread(void *arg)
         }
 
         // Check for errors
-        error = (calculate_checksum((unsigned char*)&received_packet, sizeof(packet_t)) != received_packet.trailer[0]);
+        error = (calculate_checksum((unsigned char*)&received_packet, sizeof(packet_t))== received_packet.trailer[0]);
         if (error)
         {
             printf("Packet type %d, sequence number %d, contains errors\n", received_packet.type, received_packet.seq_num);
@@ -85,7 +85,10 @@ void *type1_process_thread(void *arg)
             perror("recv");
             continue;
         }
-        bool error = (calculate_checksum((unsigned char*)&received_packet, sizeof(packet_t)) != received_packet.trailer[0]);
+        bool error = (calculate_checksum((unsigned char*)&received_packet, sizeof(packet_t))== received_packet.trailer[0]);
+        if(error){
+            printf("Error in Processing packets\n");
+        }
         // Check if packet is of type 1
         if (received_packet.type != 1)
         {
@@ -114,7 +117,10 @@ void *type2_process_thread(void *arg)
             perror("recv");
             continue;
         }
-        bool error = (calculate_checksum((unsigned char*)&received_packet, sizeof(packet_t)) != received_packet.trailer[0]);
+        bool error = (calculate_checksum((unsigned char*)&received_packet, sizeof(packet_t))== received_packet.trailer[0]);
+        if(error){
+            printf("Error in Processing packets\n");
+        }
         // Check if packet is of type 1
         if (received_packet.type != 1)
         {
