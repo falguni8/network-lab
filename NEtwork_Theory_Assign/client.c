@@ -19,12 +19,12 @@ typedef struct
 unsigned char calculate_checksum(unsigned char *packet, size_t packet_size)
 {
     unsigned char checksum = 0;
-    printf("%d\n",sizeof(packet));
+    //printf("%d\n",sizeof(packet));
     for (size_t i = 0; i < packet_size; i++)
     {
         checksum ^= packet[i];
     }
-    printf("%u\n",checksum);
+    //printf("%u\n",checksum);
     return checksum;
 }
 
@@ -63,6 +63,7 @@ int main()
         memset(packet_type_1.payload,"TYPE1", sizeof("TYPE1"));
         packet_type_1.trailer[0] = calculate_checksum((unsigned char *)&packet_type_1, sizeof(packet_t));
         ssize_t bytes_sent = sendto(sockfd, &packet_type_1, sizeof(packet_t), 0, (struct sockaddr *)&receiver_addr, sizeof(receiver_addr));
+        printf("Packet Type1 sent.....\n");
         if (bytes_sent < 0)
         {
             perror("sendto");
@@ -79,6 +80,7 @@ int main()
         memset(packet_type_2.payload,"TYPE2", sizeof("TYPE2"));
         packet_type_2.trailer[0] = calculate_checksum((unsigned char *)&packet_type_2, sizeof(packet_t));
         bytes_sent = sendto(sockfd, &packet_type_2, sizeof(packet_t), 0, (struct sockaddr *)&receiver_addr, sizeof(receiver_addr));
+        printf("Packet Type 2 sent...\n");
         if (bytes_sent < 0)
         {
             perror("sendto");
