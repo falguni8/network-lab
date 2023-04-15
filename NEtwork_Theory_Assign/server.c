@@ -60,7 +60,7 @@ void *error_check_thread(void *arg)
         }
 
         // Check for errors
-        error = (calculate_checksum((unsigned char *)&received_packet, sizeof(packet_t)) != received_packet.trailer[0]);
+        error = (calculate_checksum(received_packet.payload, sizeof(packet_t)) != received_packet.trailer[0]);
         if (error)
         {
             printf("Packet type %d, sequence number %d, contains errors\n", received_packet.type, received_packet.seq_num);
@@ -89,10 +89,11 @@ void *type1_process_thread(void *arg)
         {
             continue;
         }
-
+        pthread_mutex_lock(&mutex);
         // Process packet of type 1
         printf("Processing packet type 1, sequence number %d\n", received_packet.seq_num);
         count_type1++;
+        pthread_mutex_unlock(&mutex);
     }
 }
 
@@ -119,8 +120,10 @@ void *type2_process_thread(void *arg)
         }
 
         // Process packet of type 2
+        pthread_mutex_lock(&mutex);
         printf("Processing packet type 2, sequence number %d\n", received_packet.seq_num);
         count_type2++;
+        pthread_mutex_unlock(&mutex);
     }
 }
 
@@ -133,9 +136,11 @@ void *packet_count_thread(void *arg)
     
     while (1)
     {
+        pthread_mutex_lock(&mutex);
         printf("Number of type 1 packets received: %d\n", count_type1);
         printf("Number of type 2 packets received: %d\n", count_type2);
         fflush(stdout);
+        pthread_mutex_unlock(&mutex);
         sleep(3);
     }
     
